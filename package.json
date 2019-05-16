@@ -1,0 +1,26 @@
+{
+  "name": "moviehandler",
+  "version": "1.0.0",
+  "description": "download and stream movies",
+  "main": "app.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/piermarcobarbe/movieHandler.git"
+  },
+  "keywords": [
+    "movies",
+    "torrents"
+  ],
+  "author": "Piermarco Barbè",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/piermarcobarbe/movieHandler/issues"
+  },
+  "homepage": "https://github.com/piermarcobarbe/movieHandler#readme",
+  "dependencies": {
+    "node-torrent": "^0.2.2"
+  }
+}
