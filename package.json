@@ -21,6 +21,9 @@
   },
   "homepage": "https://github.com/piermarcobarbe/movieHandler#readme",
   "dependencies": {
-    "node-torrent": "^0.2.2"
+    "express": "^4.17.0",
+    "fs": "0.0.1-security",
+    "node-torrent": "^0.2.2",
+    "path": "^0.12.7"
   }
 }
