@@ -2,40 +2,161 @@
 <html lang="en" style="height: 100%">
 <head>
 
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="js/jquery-3.3.1.min.js" ></script>
+    <script src="js/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
 
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
+    <script src="js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+
+    <script src="js/main.js"></script>
+
+    <link rel="stylesheet" href="css/video-js.css">
 
 </head>
-<body style="height: 100%">
-<div class="container-fluid pt-1 pl-1 pr-1" style="height: 100%;">
+<body>
+<div class="container-fluid pt-1 pl-1 pr-1" >
 
     <ul class="nav nav-tabs nav-fill">
         <li class="nav-item">
             <a class="nav-link active text-white bg-dark font-weight-light" id="transmissionNavItem" data-toggle="tab" role="tab" href="#transmissionTab" aria-controls="transmissionTab" aria-selected="true">
-                <h4>Transmission</h4>
+                <h5 class="font-weight-light">Transmission</h5>
             </a>
         </li>
         <li class="nav-item  ">
             <a class="nav-link text-white bg-dark font-weight-light" id="playerNavItem" data-toggle="tab" role="tab" href="#playerTab" aria-controls="playerTab" aria-selected="false">
-                <h4>Player</h4>
+                <h5 class="font-weight-light">Player</h5>
             </a>
         </li>
     </ul>
 
-    <div class="tab-content h-100" id="myTabContent">
+    <div class="tab-content h-100" id="myTabContent" style="height: 100%;">
         <div class="tab-pane fade show active h-100" id="transmissionTab" role="tabpanel" aria-labelledby="transmission-tab">
-            Transmission
+
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                    <div class="navbar-nav">
+                        <a class="nav-item nav-link active font-weight-light" href="#" id="addTorrentNavButton" data-toggle="modal" data-target="#addTorrentModal">
+                            <img class="d-none d-sm-none d-md-none d-lg-block d-xl-block" src="images/IKONS/SVG/plus.svg" style="width: 30px">
+                            <p class="d-lg-none d-xl-none d-md-block mb-0">Add Torrents or Magnets</p>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-12 hidden-if-torrents">
+                        <h6 class="text-center pt-4 hidden-if-torrents font-weight-light" style="display: none;">No torrents to show.</h6>
+                    </div>
+                    <div class="col-md-12" id="torrentsContainer">
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" id="addTorrentModal">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title font-weight-light">Add Torrent file</h5>
+                            <button type="button" class="close font-weight-light" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body ">
+                            <div class="input-group mb-3">
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input font-weight-light" id="modalFileInput" multiple>
+                                    <label class="custom-file-label font-weight-light" for="modalFileInput" aria-describedby="inputGroupFileAddon02">Choose file(s)</label>
+                                </div>
+                                <div class="input-group-append">
+                                    <span class="input-group-text font-weight-light" id="modalUploadButton">Upload Torrent
+<!--                                        <div class="spinner-border " style="width: 1rem; height: 1rem;" role="status"></div>-->
+                                    </span>
+
+                                </div>
+                            </div>
+                            <div class="input-group mb-3">
+                                <div class="input-group">
+                                    <input type="text" class="form-control font-weight-light" id="modalMagnetInput">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text font-weight-light" id="modalMagnetButton">Upload Magnet
+                                            <!--                                        <div class="spinner-border " style="width: 1rem; height: 1rem;" role="status"></div>-->
+                                        </span>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" id="torrentInfoModal">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title font-weight-light" id="torrentInfoModalTitle"></h5>
+                            <button type="button" class="close font-weight-light" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true" class="font-weight-light">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+
+                            <div class="container">
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <button type="button" class="btn btn-danger col-md-12" id="torrentInfoModalRemoveButton">Remove</button>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
         </div>
         <div class="tab-pane fade h-100" id="playerTab" role="tabpanel" aria-labelledby="player-tab">
-            Player
-        </div>
 
+            <div class="container-fluid pt-2">
+                <div class="row">
+                    <div class="col-md-12">
+                        <video controls id='my-video' class='video-js w-100' preload='auto' data-setup='{}'>
+                            <source src='data/The.Perfect.Date.(2019).1080p.H264.Ita.Eng.Ac3.5.1-MIRCrew.mkv' type='video/mp4'>
+                            <p class='vjs-no-js'>
+                                To view this video please enable JavaScript, and consider upgrading to a web browser that
+                                <a href='https://videojs.com/html5-video-support/' target='_blank'>supports HTML5 video</a>
+                            </p>
+                        </video>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+    <div class="container" style="visibility: hidden" id="errorContainer">
+        <div class="row">
+            <div class="col-md-12" id="errorBox">
+
+            </div>
+        </div>
     </div>
 
 </div>
+<script src='video.js'></script>
+
 </body>
 </html>
