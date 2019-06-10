@@ -4,10 +4,7 @@ var app = express();
 var path = require('path');
 var fs = require('fs');
 var bodyParser = require('body-parser');
-var proxy = require('express-http-proxy');
-var ProgressBar = require('progress');
 var morgan = require('morgan');
-
 const fileUpload = require('express-fileupload');
 const serveIndex = require('serve-index');
 var Transmission = require('transmission');
