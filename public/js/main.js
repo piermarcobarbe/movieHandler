@@ -1,12 +1,22 @@
 var updateInterval;
+var player;
+
+function copyToClipboard(element) {
+    var $temp = $("<input>");
+    $("body").append($temp);
+    $temp.val($(element).text()).select();
+    document.execCommand("copy");
+    $temp.remove();
+}
+
 
 removeTorrentRequest =  function(id, goodCB, badCB){
+    console.log(id);
     $.ajax({
         url: "/remove",
         contentType : "application/json; charset=utf-8",
         type: "POST",
-        data: JSON.stringify({"torrent_id" : id}),
-        dataType : "json"
+        data: JSON.stringify({"torrent_id" : id})
     }).done(function (data, status) {
         var r = {"status" : status, "data" : data};
         if(goodCB) goodCB(r);
@@ -16,6 +26,52 @@ removeTorrentRequest =  function(id, goodCB, badCB){
         if(badCB) badCB(r);
         if(!badCB) return r;
     });
+};
+
+levelToLabel = function(level){
+    switch (level) {
+        case 0: return "B";
+        case 1: return "KB";
+        case 2: return "MB";
+        case 3: return "GB";
+        case 4: return "TB";
+    }
+
+};
+
+formatBytes = function(v){
+    let level = 0;
+    while(v > 1024){
+        v = v/1024;
+        level ++;
+    }
+
+    v = v.toFixed(2);
+
+    return v + " " + levelToLabel(level);
+
+};
+
+formatTime = function(s){
+
+    let d = new Date(s);
+
+    let r = ""
+    let _s = d.getSeconds();
+    let _m = d.getMinutes();
+    let _h = d.getHours();
+    r = _h + ":" + _m + ":" + _s;
+
+    let _d = d.getDate()-1;
+
+    if(_d >= 1){
+        if(d === 1){
+            r = d + " day, " + r;
+        } else {
+            r = d + " days, " + r;
+        }
+    }
+    return r;
 };
 
 
@@ -46,6 +102,7 @@ createTorrentRow = function(info){
     // progressBarToDo.classList.add("bg-dark");
 
 
+
     switch (info.status) {
         case 0:
             progressBarCompleted.classList.add("bg-secondary");
@@ -67,6 +124,8 @@ createTorrentRow = function(info){
             break;
 
     }
+
+
 
 
     progressBarCompleted.role = "progressbar";
@@ -91,9 +150,11 @@ createTorrentRow = function(info){
     torrentTitle.classList.add("font-bold");
     torrentTitle.classList.add("pl-2");
     torrentTitle.classList.add("pt-2");
-    torrentTitle.classList.add("text-white");
+
     torrentTitle.style.position = "relative";
     torrentTitle.style.maxWidth = "80%";
+
+
 
     let progressPercentage = document.createElement("h6");
     progressPercentage.innerText = (info.percentDone * 100 ).toFixed(2) + "%";
@@ -104,9 +165,17 @@ createTorrentRow = function(info){
     progressPercentage.classList.add("pt-2");
     progressPercentage.style.position = "absolute";
     progressPercentage.style.right= "15px";
-    progressPercentage.classList.add("text-white");
+
     progressPercentage.style.maxWidth = "15%";
 
+
+    if(info.error !== 0) {
+        progressPercentage.classList.add("text-danger");
+        torrentTitle.classList.add("text-danger");
+    } else {
+        progressPercentage.classList.add("text-white");
+        torrentTitle.classList.add("text-white");
+    }
 
 // <button type="button" class="btn btn-primary">Primary</button>
 
@@ -121,19 +190,31 @@ createTorrentRow = function(info){
     // row.appendChild(deleteButton);
 
     row.onclick = function () {
-        console.log("CLICK");
+        // console.log("CLICK");
         $("#torrentInfoModalTitle").text(info.name);
-        $("#torrentInfoModalRemoveButton").click(function () {
-            console.log("Removing torrent with id " + info.id);
-            removeTorrentRequest(info.id, function (info) {
-                console.log("Removed torrent with id " + info.id);
-                $("#torrentInfoModal").modal('hide');
-            }, function (info) {
-                $("#torrentInfoModal").modal('hide');
-                displayError(info);
-            })
-        })
+        console.log("Set id ", info.id);
+
+        $("#torrentInfoModalRemoveButton").attr("remove-id", info.id);
+
+        $("#torrentInfoModalMagnetLink").text(info.magnetLink);
+
+        $("#torrentInfoModalMagnetLink").on('click', function () {
+            console.log("Copy torrentInfoModalMagnetLink");
+            copyToClipboard($(this));
+        });
+
         $("#torrentInfoModal").modal('toggle');
+
+        if(info.error !== 0){
+            $("#torrentInfoModalErrorRow").show();
+            $("#torrentInfoModalErrorDiv").text(info.errorString);
+        } else {
+            $("#torrentInfoModalErrorRow").hide();
+        }
+
+        $("#torrentInfoModalFileSize").text(formatBytes(info.totalSize));
+        $("#torrentInfoModalPeersNumber").text(info.peers.length)
+
     };
 
     return row;
@@ -191,11 +272,8 @@ onClickModalUploadButton = function(){
                 console.log(status);
                 console.log(data);
         });
-
-
-
-    })
-}
+    });
+};
 
 getTransmissionStatus = function(goodCB, badCB){
     $.ajax({
@@ -208,11 +286,87 @@ getTransmissionStatus = function(goodCB, badCB){
     })
 };
 
+createSourceListItem = function(item){
+    console.log(item);
+    let r = document.createElement("div");
+    r.classList.add("col-12");
+    r.classList.add("btn");
+    r.classList.add("btn-dark");
+    r.classList.add("font-weight-light");
+    r.classList.add("mt-1");
+    r.classList.add("text-left");
+    r.classList.add("pr-4");
 
+    r.onclick = function(){
+        console.log(item.href);
+        player.src({type : "video/mp4", src : item.href});
+    }
+
+
+    r.innerText = item.file;
+
+    return r;
+};
+
+populateSourcesList = function(obj){
+
+    console.log("pSL");
+
+    var files = obj.files;
+    var dirs = obj.directories;
+
+
+    console.log(files, dirs);
+
+    for(let i = 0; i < files.length; i++){
+        let item = files[i]
+        item = createSourceListItem(item);
+        $("#sourceList").append(item);
+
+    }
+};
+
+getSourcesList = function(goodCB, badCB){
+    $.ajax({
+        url: "/sources/",
+        type: "GET"
+    }).done(function (data, status) {
+        console.log("get /sources");
+        console.log(status);
+        console.log(data);
+
+        if(goodCB) return goodCB(data);
+        return data;
+
+    }).fail (function (data, status) {
+        console.log("bad get /sources");
+        if(badCB) return badCB(data);
+        return data;
+
+    });
+};
+
+populateStatsModal = function(data){
+    let downloaded = formatBytes(data['cumulative-stats'].downloadedBytes);
+    let uploaded = formatBytes(data['cumulative-stats'].uploadedBytes);
+    let addedFiles = data['cumulative-stats'].filesAdded
+    let activeTime = formatTime(data['cumulative-stats'].secondsActive);
+    let timeStarted = data['cumulative-stats'].sessionCount;
+    let downSpeed = formatBytes(data.downloadSpeed) + "/s";
+    let upSpeed = formatBytes(data.uploadSpeed) + "/s";
+
+    $("#statsModalDownloadedBytes").text(downloaded);
+    $("#statsModalUploadedBytes").text(uploaded);
+    $("#statsModalAddedFiles").text(addedFiles);
+    $("#statsModalActiveTime").text(activeTime);
+    $("#statsModalStartedTime").text(timeStarted);
+    $("#statsModalDownloadSpeed").text(downSpeed);
+    $("#statsModalUploadSpeed").text(upSpeed);
+};
 
 renderStatus = function(status){
-    // console.log("status");
-    // console.log(status);
+    console.log("status");
+    console.log(status);
 
     // console.log(status.torrentsStatus.torrents.length)
 
@@ -228,6 +382,9 @@ renderStatus = function(status){
 
         $(".hidden-if-torrents").show();
     }
+
+    populateStatsModal(status);
+
 };
 
 createNewError = function(text){
@@ -243,14 +400,14 @@ createNewError = function(text){
     _alert.innerText = text;
 
     return _alert;
-}
+};
 
 displayError = function(error){
     console.log("error");
     console.log(error);
 
     clearInterval(updateInterval);
-    $("#myTabContent").hide()
+    $("#myTabContent").hide();
     $("#errorContainer").attr("style", "visibility : visible");
 
 
@@ -263,8 +420,8 @@ displayError = function(error){
 
 };
 
-monitor = function(){
-    updateInterval = setInterval(update, 2000);
+monitor = function(t){
+    updateInterval = setInterval(update, t);
 };
 
 update = function(){
@@ -310,12 +467,37 @@ onClickMagnetUploadButton = function(){
         }
     })
 
+};
+
+onClickTorrentRemoveButton = function(){
+
+    $("#torrentInfoModalRemoveButton").on('click',function () {
+        let id = $(this).attr("remove-id");
+        id = parseInt(id);
+        console.log("Removing torrent with id " + id);
+        removeTorrentRequest(id, function (info) {
+            let deletedId = info.data.result.deleted[0];
+            console.log("Removed torrent with id " + deletedId);
+            $("#torrentInfoModal").modal('hide');
+        }, function (info) {
+            $("#torrentInfoModal").modal('hide');
+            displayError(info);
+        })
+    });
 }
+
+
+setupPlayer = function(){
+    player = videojs("myPlayer");
+};
 
 window.onload = function () {
     onChangeFileNameUpload();
     onClickModalUploadButton();
     onClickMagnetUploadButton();
+    onClickTorrentRemoveButton();
     update();
-    monitor();
+    getSourcesList(populateSourcesList, displayError);
+    monitor(2000);
+    setupPlayer();
 };
