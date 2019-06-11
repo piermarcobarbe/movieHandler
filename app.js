@@ -19,7 +19,9 @@ app.use(express.json());
 
 var settings = {
     "torrentFilesDir" : path.join(__dirname, "./public/torrent"),
-    "torrentDownloadDir" : path.join(__dirname, "./public/data")
+    "torrentDownloadDir" : path.join(__dirname, "./public/data"),
+    "publicTorrentHref" : "/torrent/",
+    "publicDataHref" : "/data/"
 };
 
 
@@ -199,13 +201,14 @@ newErrorJSON = function(err){
 app.post('/remove', function (req, res) {
    console.log(req);
 
-   if(req.body === null || req.body.torrent_id === null){
-       completeResponseWithJSON(res, 400, newErrorJSON("No id provided"));
-   }
+   if(req.body === null || req.body.torrent_id === null) return completeResponseWithJSON(res, 400, newErrorJSON("No id provided"));
+
+   if(typeof req.body.torrent_id !== "number") return completeResponseWithJSON(res, 400, newErrorJSON("Torrent id must be a number"));
+
 
    transmission.remove(req.body.torrent_id, function (err) {
        if(err) return completeResponseWithJSON(res, 400, newErrorJSON(err));
-       completeResponseWithJSON(res, 200, null)
+       completeResponseWithJSON(res, 200, {"result" : {"deleted" : [req.body.torrent_id]}})
 
    }
 
@@ -262,6 +265,34 @@ app.get("/status", function (req, res) {
             completeResponseWithJSON(res, 200, args)
         })
     });
+});
+
+app.get("/sources/*", function (req, res) {
+    if (!fs.existsSync(settings.torrentDownloadDir)) return completeResponseWithJSON(res, 404, newErrorJSON(settings.torrentDownloadDir + " does not exist."));
+    let _path = req.path.split("/sources/")[1];
+    // console.log(path);
+    let pathToRead = path.join(settings.torrentDownloadDir, _path);
+    fs.readdir(pathToRead, (err, files) => {
+        if(err) return completeResponseWithJSON(res, 500, newErrorJSON(err));
+        var data = { "files" : [], "directories" : [] };
+        files.forEach(file => {
+            // console.log(file);
+            if(fs.lstatSync(path.join(pathToRead, file)).isFile()) {
+                let _data = {};
+                _data.file = file;
+                let href = path.join(settings.publicDataHref, _path);
+                href = path.join(href, file);
+                _data.href = href;
+                data.files.push(_data);
+            }
+            if(fs.lstatSync(path.join(settings.torrentDownloadDir ,file)).isDirectory()) data['directories'].push(file);
+
+        });
+
+        completeResponseWithJSON(res, 200, data);
+
+    });
+
 });
 
 function get(hash, cb) {
@@ -328,15 +359,17 @@ function remove(hash) {
 // });
 
 app.use(bodyParser.json());
+
 app.use('/', express.static(path.join(__dirname, "public/")));
 
-app.use('/torrent/', express.static(path.join(__dirname, settings.torrentFilesDir)));
-app.use('/torrent/', serveIndex(path.join(__dirname, settings.torrentFilesDir), { 'icons': true }));
+// console.log(path.join(__dirname, settings.torrentFilesDir));
+
+app.use(settings.publicTorrentHref, express.static( settings.torrentFilesDir));
+app.use(settings.publicTorrentHref, serveIndex(settings.torrentFilesDir, { 'icons': true }));
 
 
-
-app.use('/data/', express.static(path.join(__dirname, settings.torrentDownloadDir)));
-app.use('/data/', serveIndex(path.join(__dirname, settings.torrentDownloadDir), { 'icons': true }));
+app.use(settings.publicDataHref, express.static(settings.torrentDownloadDir));
+app.use(settings.publicDataHref, serveIndex(settings.torrentDownloadDir, { 'icons': true }));
 
 
 
