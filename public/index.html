@@ -1,17 +1,13 @@
 <!DOCTYPE html>
-<html lang="en" style="height: 100%">
+<html lang="en" style="height: 100%; min-width: 400px">
 <head>
 
     <script src="js/jquery-3.3.1.min.js" ></script>
     <script src="js/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-
     <link rel="stylesheet" href="css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-
     <script src="js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
-
     <script src="js/main.js"></script>
-
     <link rel="stylesheet" href="css/video-js.css">
 
 </head>
@@ -20,19 +16,19 @@
 
     <ul class="nav nav-tabs nav-fill">
         <li class="nav-item">
-            <a class="nav-link active text-white bg-dark font-weight-light" id="transmissionNavItem" data-toggle="tab" role="tab" href="#transmissionTab" aria-controls="transmissionTab" aria-selected="true">
+            <a class="nav-link text-white bg-dark font-weight-light" id="transmissionNavItem" data-toggle="tab" role="tab" href="#transmissionTab" aria-controls="transmissionTab" aria-selected="true">
                 <h5 class="font-weight-light">Transmission</h5>
             </a>
         </li>
         <li class="nav-item  ">
-            <a class="nav-link text-white bg-dark font-weight-light" id="playerNavItem" data-toggle="tab" role="tab" href="#playerTab" aria-controls="playerTab" aria-selected="false">
+            <a class="nav-link active text-white bg-dark font-weight-light" id="playerNavItem" data-toggle="tab" role="tab" href="#playerTab" aria-controls="playerTab" aria-selected="false">
                 <h5 class="font-weight-light">Player</h5>
             </a>
         </li>
     </ul>
 
     <div class="tab-content h-100" id="myTabContent" style="height: 100%;">
-        <div class="tab-pane fade show active h-100" id="transmissionTab" role="tabpanel" aria-labelledby="transmission-tab">
+        <div class="tab-pane fade h-100" id="transmissionTab" role="tabpanel" aria-labelledby="transmission-tab">
 
             <nav class="navbar navbar-expand-lg navbar-light bg-light">
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,9 +36,13 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                     <div class="navbar-nav">
+                        <a class="nav-item nav-link active font-weight-light" href="#" id="showStatsNavButton" data-toggle="modal" data-target="#statsModal">
+                            <img class="d-none d-sm-none d-md-none d-lg-block d-xl-block" src="images/IKONS/SVG/bar_chart_2.svg" style="width: 30px">
+                            <p class="d-lg-none d-xl-none d-md-block mb-0">Show statistics</p>
+                        </a>
                         <a class="nav-item nav-link active font-weight-light" href="#" id="addTorrentNavButton" data-toggle="modal" data-target="#addTorrentModal">
                             <img class="d-none d-sm-none d-md-none d-lg-block d-xl-block" src="images/IKONS/SVG/plus.svg" style="width: 30px">
-                            <p class="d-lg-none d-xl-none d-md-block mb-0">Add Torrents or Magnets</p>
+                            <p class="d-lg-none d-xl-none d-md-block mb-0">Add Torrents or Magnet</p>
                         </a>
                     </div>
                 </div>
@@ -99,10 +99,10 @@
             </div>
 
             <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" id="torrentInfoModal">
-                <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title font-weight-light" id="torrentInfoModalTitle"></h5>
+                            <h5 class="modal-title font-weight-light text-truncate" id="torrentInfoModalTitle"></h5>
                             <button type="button" class="close font-weight-light" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true" class="font-weight-light">&times;</span>
                             </button>
@@ -112,8 +112,31 @@
                             <div class="container">
 
                                 <div class="row">
+                                    <div class="col-4 font-weight-light">Size:</div>
+                                    <div class="col-8 font-weight-light text-right" id="torrentInfoModalFileSize"></div>
+                                </div>
+
+
+                                <div class="row pt-3">
+                                    <div class="col-4 font-weight-light">Peers:</div>
+                                    <div class="col-8 font-weight-light text-right" id="torrentInfoModalPeersNumber"></div>
+                                </div>
+
+                                <div class="row pt-3">
+
+                                    <div class="col-2 font-weight-light">Magnet link:</div>
+                                    <div class="col-10 text-justify font-weight-light text-truncate" id="torrentInfoModalMagnetLink"></div>
+
+                                </div>
+
+                                <div class="row pt-3" style="display: none" id="torrentInfoModalErrorRow">
+                                    <div class="col-4 font-weight-light text-danger">Error:</div>
+                                    <div class="col-8 text-justify font-weight-light" id="torrentInfoModalErrorDiv"></div>
+                                </div>
+
+                                <div class="row pt-3"  >
                                     <div class="col-md-12">
-                                        <button type="button" class="btn btn-danger col-md-12" id="torrentInfoModalRemoveButton">Remove</button>
+                                        <button type="button" class="btn btn-danger col-md-12" id="torrentInfoModalRemoveButton" >Remove</button>
                                     </div>
                                 </div>
 
@@ -125,21 +148,77 @@
             </div>
 
 
+            <div class="modal fade" tabindex="-1" role="dialog" id="statsModal">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title font-weight-light">Statistics</h5>
+                                <button type="button" class="close font-weight-light" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true" class="font-weight-light">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+
+                                <div class="container-fluid">
+
+                                    <div class="row">
+                                        <div class="col-8 font-weight-light">Downloaded data:</div>
+                                        <div class="col-4 text-right font-weight-light" id="statsModalDownloadedBytes"></div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-8 font-weight-light">Uploaded data:</div>
+                                        <div class="col-4 text-right font-weight-light" id="statsModalUploadedBytes"></div>
+                                    </div>
+
+                                    <div class="row pt-4">
+                                        <div class="col-8 font-weight-light">Added files:</div>
+                                        <div class="col-4 text-right font-weight-light" id="statsModalAddedFiles"></div>
+                                    </div>
+
+                                    <div class="row pt-4">
+                                        <div class="col-8 font-weight-light">Active time:</div>
+                                        <div class="col-4 text-right font-weight-light" id="statsModalActiveTime"></div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-8 font-weight-light">Started times:</div>
+                                        <div class="col-4 text-right font-weight-light" id="statsModalStartedTime"></div>
+                                    </div>
+
+                                    <div class="row pt-4">
+                                        <div class="col-8 font-weight-light">Download speed:</div>
+                                        <div class="col-4 text-right font-weight-light" id="statsModalDownloadSpeed"></div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-8 font-weight-light">Upload speed:</div>
+                                        <div class="col-4 text-right font-weight-light" id="statsModalUploadSpeed"></div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </div>
+                </div>
+            </div>
+
+
 
         </div>
-        <div class="tab-pane fade h-100" id="playerTab" role="tabpanel" aria-labelledby="player-tab">
+        <div class="tab-pane fade h-100 active show" id="playerTab" role="tabpanel" aria-labelledby="player-tab">
 
             <div class="container-fluid pt-2">
                 <div class="row">
                     <div class="col-md-12">
-                        <video controls id='my-video' class='video-js w-100' preload='auto' data-setup='{}'>
-                            <source src='data/The.Perfect.Date.(2019).1080p.H264.Ita.Eng.Ac3.5.1-MIRCrew.mkv' type='video/mp4'>
+                        <video controls id='myPlayer' class='video-js w-100' preload='auto' data-setup='{}'>
                             <p class='vjs-no-js'>
                                 To view this video please enable JavaScript, and consider upgrading to a web browser that
                                 <a href='https://videojs.com/html5-video-support/' target='_blank'>supports HTML5 video</a>
                             </p>
                         </video>
                     </div>
+                </div>
+
+                <div class="row pt-2" id="sourceList">
+
                 </div>
             </div>
 
@@ -156,7 +235,7 @@
     </div>
 
 </div>
-<script src='video.js'></script>
+<script src='js/video.js'></script>
 
 </body>
 </html>
