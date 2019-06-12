@@ -298,8 +298,9 @@ createSourceListItem = function(item){
     r.classList.add("pr-4");
 
     r.onclick = function(){
-        console.log(item.href);
-        player.src({type : "video/mp4", src : item.href});
+        console.log(item);
+        // player.src({type : item.type, src : item.href});
+        player.src({type : "video/webm", src : item.href});
     }
 
 
