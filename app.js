@@ -6,6 +6,7 @@ var fs = require('fs');
 var bodyParser = require('body-parser');
 var morgan = require('morgan');
 const fileUpload = require('express-fileupload');
+var mime = require('mime-types');
 const serveIndex = require('serve-index');
 var Transmission = require('transmission');
 
@@ -270,22 +271,24 @@ app.get("/status", function (req, res) {
 app.get("/sources/*", function (req, res) {
     if (!fs.existsSync(settings.torrentDownloadDir)) return completeResponseWithJSON(res, 404, newErrorJSON(settings.torrentDownloadDir + " does not exist."));
     let _path = req.path.split("/sources/")[1];
-    // console.log(path);
+    console.log(_path);
     let pathToRead = path.join(settings.torrentDownloadDir, _path);
+    console.log(pathToRead);
     fs.readdir(pathToRead, (err, files) => {
         if(err) return completeResponseWithJSON(res, 500, newErrorJSON(err));
         var data = { "files" : [], "directories" : [] };
         files.forEach(file => {
-            // console.log(file);
-            if(fs.lstatSync(path.join(pathToRead, file)).isFile()) {
+            var target = path.join(pathToRead, file);
+            if(fs.lstatSync(target).isFile()) {
                 let _data = {};
                 _data.file = file;
+                _data.type = mime.lookup(file);
                 let href = path.join(settings.publicDataHref, _path);
                 href = path.join(href, file);
                 _data.href = href;
                 data.files.push(_data);
             }
-            if(fs.lstatSync(path.join(settings.torrentDownloadDir ,file)).isDirectory()) data['directories'].push(file);
+            if(fs.lstatSync(target).isDirectory()) data['directories'].push(file);
 
         });
 
@@ -295,48 +298,6 @@ app.get("/sources/*", function (req, res) {
 
 });
 
-function get(hash, cb) {
-    transmission.get(hash, function(err, result) {
-        if (err) {
-            throw err;
-        }
-        cb(null, result.torrents[0]);
-    });
-}
-
-function watch(hash) {
-    get(hash, function(err, torrent) {
-        if (err) {
-            throw err;
-        }
-
-        var downloadedEver = 0;
-        var WatchBar = new ProgressBar('  downloading [:bar] :percent :etas', {
-            complete : '=',
-            incomplete : ' ',
-            width : 35,
-            total : torrent.sizeWhenDone
-        });
-
-        function tick(err, torrent) {
-            if (err) {
-                throw err;
-            }
-            var downloaded = torrent.downloadedEver - downloadedEver;
-            downloadedEver = torrent.downloadedEver;
-            WatchBar.tick(downloaded);
-
-            if (torrent.sizeWhenDone === torrent.downloadedEver) {
-                return remove(hash);
-            }
-            setTimeout(function() {
-                get(hash, tick);
-            }, 1000);
-        }
-
-        get(hash, tick);
-    });
-}
 
 function remove(hash) {
     transmission.remove(hash, function(err) {
