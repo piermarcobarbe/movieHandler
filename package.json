@@ -27,9 +27,11 @@
     "http": "0.0.0",
     "mime-types": "^2.1.24",
     "morgan": "^1.9.1",
+    "mz": "^2.7.0",
     "nodemon": "^1.19.1",
     "path": "^0.12.7",
-    "serve-index": "^1.9.1",
-    "transmission": "^0.4.9"
+    "serve-index": "github:piermarcobarbe/serve-index",
+    "transmission": "^0.4.9",
+    "video-stream": "^1.2.1"
   }
 }
