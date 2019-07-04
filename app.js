@@ -9,6 +9,8 @@ const fileUpload = require('express-fileupload');
 var mime = require('mime-types');
 const serveIndex = require('serve-index');
 var Transmission = require('transmission');
+const videoStream = require('video-stream');
+
 
 app.use(morgan('tiny', {
     skip: function (req, res) { return req.path === "/status"; }
@@ -25,16 +27,33 @@ var settings = {
     "publicDataHref" : "/data/"
 };
 
+if(!(fs.existsSync(settings.torrentDownloadDir))) fs.mkdirSync(settings.torrentDownloadDir);
+if(!(fs.existsSync(settings.torrentFilesDir))) fs.mkdirSync(settings.torrentFilesDir);
+
 
 // var sample = 'http://releases.ubuntu.com/14.04.1/ubuntu-14.04.1-desktop-amd64.iso.torrent';
 
 
 
-transmission = new Transmission({
+var transmission = new Transmission({
     "host" : "localhost",
     "port" : 9091
 });
 
+completeResponseWithJSON = function(res, code, json){
+    res.status(code);
+    res.setHeader('Content-Type', 'application-json');
+    if(json) res.end(JSON.stringify(json));
+    if(!json) res.end();
+};
+
+newErrorJSON = function(err){
+    return {"Error" : err};
+};
+
+newResultJSON = function(result){
+    return {"Result" : result};
+};
 
 saveFile = function(file, resCB, errCB){
     var finalFileName = path.join(settings.torrentFilesDir, file.name);
@@ -136,7 +155,7 @@ addTorrentToTransmission = function(torrentFilePath, goodCB, badCB){
 
     var options = {
         "download-dir" : settings.torrentDownloadDir
-    }
+    };
 
     checkFolder(settings.torrentDownloadDir, function () {
         transmission.addFile(torrentFilePath, options,function (err, arg) {
@@ -188,19 +207,10 @@ addTorrentsToTransmission = function(torrentList, goodCB, badCB){
 
 }
 
-completeResponseWithJSON = function(res, code, json){
-    res.status(code);
-    res.setHeader('Content-Type', 'application-json');
-    if(json) res.end(JSON.stringify(json));
-    if(!json) res.end();
-}
 
-newErrorJSON = function(err){
-    return {"Error" : err};
-};
 
 app.post('/remove', function (req, res) {
-   console.log(req);
+   // console.log(req);
 
    if(req.body === null || req.body.torrent_id === null) return completeResponseWithJSON(res, 400, newErrorJSON("No id provided"));
 
@@ -268,12 +278,41 @@ app.get("/status", function (req, res) {
     });
 });
 
+
+app.post("/setup", function (req, res) {
+
+    // console.log(req.body);
+
+
+    let newSettings = {};
+    newSettings.host = transmission.host;
+    newSettings.port = transmission.port;
+    newSettings.username = req.body.user;
+    newSettings.password = req.body.passwd;
+
+    transmission = new Transmission(newSettings);
+
+    transmission.sessionStats(function (err, args) {
+        if(err) return completeResponseWithJSON(res, 401, newErrorJSON(err));
+        return completeResponseWithJSON(res, 200, newResultJSON("Authenticated"));
+    });
+
+
+
+
+});
+
 app.get("/sources/*", function (req, res) {
     if (!fs.existsSync(settings.torrentDownloadDir)) return completeResponseWithJSON(res, 404, newErrorJSON(settings.torrentDownloadDir + " does not exist."));
     let _path = req.path.split("/sources/")[1];
-    console.log(_path);
+    // console.log("_path: " + _path);
+    // if(_path === "") return completeResponseWithJSON(res, 404, newErrorJSON("Cannot find sources for requested path." ));
+    _path = decodeURI(_path);
     let pathToRead = path.join(settings.torrentDownloadDir, _path);
-    console.log(pathToRead);
+    console.log("pTR:" + pathToRead);
+    // console.log("resolved path: " + path.resolve( "/video", _path , ":filename"));
+    // app.get(path.resolve( "/video", _path , ":filename") ,videoStream({ dir: path.resolve(pathToRead)}));
+    // console.log(req.path);
     fs.readdir(pathToRead, (err, files) => {
         if(err) return completeResponseWithJSON(res, 500, newErrorJSON(err));
         var data = { "files" : [], "directories" : [] };
@@ -283,8 +322,8 @@ app.get("/sources/*", function (req, res) {
                 let _data = {};
                 _data.file = file;
                 _data.type = mime.lookup(file);
-                let href = path.join(settings.publicDataHref, _path);
-                href = path.join(href, file);
+                // let href = path.join(settings.publicDataHref, _path);
+                let href = path.join(_path, file);
                 _data.href = href;
                 data.files.push(_data);
             }
@@ -297,6 +336,51 @@ app.get("/sources/*", function (req, res) {
     });
 
 });
+
+
+
+// app.get('/video/:filename' ,videoStream({ dir: path.resolve(settings.torrentDownloadDir)}));
+app.get('/video/*', function(req, res) {
+    // console.log(req.params)
+    const filePath = path.resolve(settings.torrentDownloadDir, req.params[0]);
+    console.log(filePath);
+    const stat = fs.statSync(filePath);
+
+    if(stat.isDirectory()) return completeResponseWithJSON(res, 400, newErrorJSON("Cannot stream a directory."));
+    const fileSize = stat.size;
+    const range = req.headers.range;
+    const mt = mime.lookup(filePath);
+    if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10)
+        const end = parts[1]
+            ? parseInt(parts[1], 10)
+            : fileSize-1
+        const chunksize = (end-start)+1
+        const file = fs.createReadStream(filePath, {start, end})
+        const head = {
+            'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+            'Accept-Ranges': 'bytes',
+            'Transfer-Encoding': 'chunked',
+            'Content-Length': chunksize,
+            'Content-Type': `video/mp4`
+
+        }
+        res.writeHead(206, head);
+        file.pipe(res);
+    } else {
+        const head = {
+            'Transfer-Encoding': 'chunked',
+            'Content-Length': fileSize,
+            'Content-Type': `video/mp4`
+
+
+        }
+        res.writeHead(200, head)
+        fs.createReadStream(filePath).pipe(res)
+    }
+});
+
 
 
 function remove(hash) {
