@@ -1,5 +1,5 @@
 var updateInterval;
-var player;
+var alertCounter = 0;
 
 function copyToClipboard(element) {
     var $temp = $("<input>");
@@ -280,16 +280,19 @@ getTransmissionStatus = function(goodCB, badCB){
         url : "/status",
         method : "GET"
     }).done(function (data, status) {
-        goodCB(data);
+        if(goodCB) return goodCB(data);
+        return data;
     }).fail(function (data, status) {
-        badCB(data);
+        if(badCB) return badCB(data);
+        return data;
     })
 };
 
 createSourceListItem = function(item){
     console.log(item);
     let r = document.createElement("div");
-    r.classList.add("col-12");
+    r.classList.add("col-8");
+    r.classList.add("mx-auto");
     r.classList.add("btn");
     r.classList.add("btn-dark");
     r.classList.add("font-weight-light");
@@ -297,44 +300,98 @@ createSourceListItem = function(item){
     r.classList.add("text-left");
     r.classList.add("pr-4");
 
-    r.onclick = function(){
-        console.log(item);
-        // player.src({type : item.type, src : item.href});
-        player.src({type : "video/webm", src : item.href});
-    }
 
-
-    r.innerText = item.file;
+    if(typeof item === 'string') r.innerText = item;
+    if(typeof item === 'object') r.innerText = item.file;
 
     return r;
 };
 
+createSourceListFile = function(item){
+
+
+    var file = createSourceListItem(item);
+
+    console.log(file);
+
+    file.onclick = function(){
+
+        console.log(item.href);
+        let url = "video/" + item.href;
+        $("#myPlayer").attr("src", url);
+        $("#playerRow").addClass("pt-2");
+        $("#playerRow").removeClass("d-none");
+
+    };
+
+    return file;
+}
+
+createSourceListDir = function (dirname){
+
+    var dir = createSourceListItem(dirname);
+    console.log("Create dir " + dirname);
+
+    dir.onclick = function () {
+        showPlayerNaviButtons();
+        console.log("Click on " + dirname);
+        getSourcesList(populateSourcesList, displayError, dirname);
+    };
+
+    return dir;
+};
+
+showPlayerNaviButtons = function(){
+    $("#playerNaviButtons").removeClass("d-none");
+};
+
+hidePlayerNaviButtons = function(){
+    $("#playerNaviButtons").addClass("d-none");
+};
+
 populateSourcesList = function(obj){
 
-    console.log("pSL");
+    // console.log("pSL");
 
     var files = obj.files;
     var dirs = obj.directories;
 
 
-    console.log(files, dirs);
+    // console.log(files, dirs);
+
+    $("#sourceList").empty();
 
     for(let i = 0; i < files.length; i++){
-        let item = files[i]
-        item = createSourceListItem(item);
+        let item = files[i];
+        item = createSourceListFile(item);
         $("#sourceList").append(item);
+    }
 
+    for(let i = 0; i < dirs.length; i++){
+        let dir = dirs[i];
+        dir = createSourceListDir(dir);
+        $("#sourceList").append(dir);
+    }
+
+    if(obj.injectedDir !== ""){
+        showPlayerNaviButtons();
+    } else {
+        hidePlayerNaviButtons();
     }
 };
 
-getSourcesList = function(goodCB, badCB){
+getSourcesList = function(goodCB, badCB, dir){
+    var path = "/sources/";
+    if(!dir) dir = "";
+    if(dir) path += dir;
     $.ajax({
-        url: "/sources/",
+        url: path,
         type: "GET"
     }).done(function (data, status) {
-        console.log("get /sources");
-        console.log(status);
-        console.log(data);
+        console.log("get /sources" + dir);
+        // console.log(status);
+        // console.log(data);
+        dir ? data.injectedDir = dir : data.injectedDir = "";
 
         if(goodCB) return goodCB(data);
         return data;
@@ -366,6 +423,10 @@ populateStatsModal = function(data){
 };
 
 renderStatus = function(status){
+
+    $("#myTabContent").show();
+    $("#errorContainer").attr("style", "visibility : hidden");
+
     console.log("status");
     console.log(status);
 
@@ -389,16 +450,50 @@ renderStatus = function(status){
 };
 
 createNewError = function(text){
-    let _alert = document.createElement("div");
-    _alert.classList.add("alert");
-    _alert.classList.add("alert_danger");
-    _alert.classList.add("bg-danger");
-    _alert.classList.add("text-white");
-    _alert.classList.add("text-weight-light");
 
+// <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        // <strong>Holy guacamole!</strong> You should check in on some of those fields below.
+    // <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        // <span aria-hidden="true">&times;</span>
+    // </button>
+    // </div>
+    let _alert = document.createElement("div");
+    _alert.classList.add("mx-auto");
+    _alert.classList.add("mt-2");
+    _alert.classList.add("alert");
+    _alert.classList.add("col-md-6");
+    _alert.classList.add("alert-danger");
+    _alert.classList.add("alert-dismissible");
+    _alert.classList.add("fade");
+    _alert.classList.add("show");
     _alert.setAttribute("role", "alert");
 
-    _alert.innerText = text;
+
+    _alert.innerHTML = text;
+
+    let _alertButton = document.createElement("button");
+    _alertButton.setAttribute("type", "button");
+    _alertButton.classList.add("close");
+    _alertButton.setAttribute("data-dismiss", "alert");
+    _alertButton.setAttribute("aria-label", "Close");
+
+    let _alertButtonSpan = document.createElement("span");
+    _alertButtonSpan.setAttribute("aria-hidden", "true");
+    _alertButtonSpan.innerHTML = "&times;";
+
+    _alertButton.appendChild(_alertButtonSpan);
+    _alert.appendChild(_alertButton);
+
+    let id = "dismissible-alert-" + alertCounter;
+    alertCounter++;
+
+    _alert.id = id;
+
+    setTimeout(function () {
+        $("#"+id).alert('close');
+    }, 3000);
+
+    console.log(id);
 
     return _alert;
 };
@@ -408,12 +503,15 @@ displayError = function(error){
     console.log(error);
 
     clearInterval(updateInterval);
-    $("#myTabContent").hide();
-    $("#errorContainer").attr("style", "visibility : visible");
+    // $("#myTabContent").hide();
+    // $("#errorContainer").attr("style", "visibility : visible");
 
 
     if(error.syscall === "connect" && error.code === "ECONNREFUSED"){
-        var _err = createNewError("Node cannot connect to transmission. Start Transmission and reload the page.")
+        var _err = createNewError("Cannot connect to Transmission. Start Transmission and reload the page.")
+    } else {
+        let errorText = error.result[0].replace(new RegExp("<h1>", 'g'), "<strong>").replace(new RegExp("</h1>", 'g'), "</strong><br> ");
+        var _err = createNewError(errorText);
     }
 
 
@@ -422,6 +520,7 @@ displayError = function(error){
 };
 
 monitor = function(t){
+    // console.log("Call monitor");
     updateInterval = setInterval(update, t);
 };
 
@@ -480,25 +579,102 @@ onClickTorrentRemoveButton = function(){
             let deletedId = info.data.result.deleted[0];
             console.log("Removed torrent with id " + deletedId);
             $("#torrentInfoModal").modal('hide');
+            update();
         }, function (info) {
             $("#torrentInfoModal").modal('hide');
             displayError(info);
         })
     });
 }
-
-
-setupPlayer = function(){
-    player = videojs("myPlayer");
+onClickNaviHomeButton = function(){
+    $("#NaviHome").click(function () {
+        hidePlayerNaviButtons();
+        $("#playerRow").addClass("d-none");
+        getSourcesList(populateSourcesList, displayError);
+    });
 };
 
+requestTransmissionAuth = function () {
+    let transmissionAuth = {};
+    transmissionAuth.user = $("#transmissionUsername").val();
+    transmissionAuth.passwd = $("#transmissionPassword").val();
+
+    console.log(transmissionAuth);
+
+    $.ajax({
+        url: "/setup",
+        type: 'POST',
+        data: JSON.stringify(transmissionAuth),
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json'
+    }).done(function (data, status) {
+        console.log("DONE");
+        // ("#modalFileInput").val();
+
+        console.log(data);
+        console.log(status);
+        checkForAuth();
+    }).fail (function (data, status) {
+        console.log("ERROR");
+        console.log(data);
+        console.log(status);
+
+        if(data.status === 401) {
+            let transmissionResponseText = JSON.parse(data.responseText);
+            console.log(transmissionResponseText);
+            displayError(transmissionResponseText.Error);
+        }
+
+        checkForAuth();
+    });
+
+}
+
+onClickSetTransmissionAuth = function(){
+
+    $("#setTransmissionAuth").click(requestTransmissionAuth);
+
+
+
+
+};
+
+checkForAuth = function(){
+
+    getTransmissionStatus(function () {
+        $("#mainContainer").show();
+        $("#authContainer").hide();
+        $("#myTabContent").show();
+        onChangeFileNameUpload();
+        onClickModalUploadButton();
+        onClickMagnetUploadButton();
+        onClickTorrentRemoveButton();
+        onClickNaviHomeButton();
+        update();
+        getSourcesList(populateSourcesList, displayError);
+        monitor(2000);
+    }, function () {
+        $("#mainContainer").hide();
+        $("#authContainer").show();
+
+    })
+};
+
+
 window.onload = function () {
+    checkForAuth();
+    onClickSetTransmissionAuth();
     onChangeFileNameUpload();
     onClickModalUploadButton();
     onClickMagnetUploadButton();
     onClickTorrentRemoveButton();
+    onClickNaviHomeButton();
     update();
     getSourcesList(populateSourcesList, displayError);
     monitor(2000);
-    setupPlayer();
+
+    onkeyup = function(e) {
+        console.log(e);
+        if (e.key === "Enter") requestTransmissionAuth();
+    }
 };
