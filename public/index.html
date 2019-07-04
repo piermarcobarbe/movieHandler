@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="height: 100%;">
 <head>
 
     <script src="js/jquery-3.3.1.min.js" ></script>
@@ -10,6 +10,7 @@
     <script src="js/main.js"></script>
     <link rel="shortcut icon" type="image/png" href="images/MovieHandlerIconWhite.png"/>
     <title>Movie Handler</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
 </head>
 <body>
@@ -53,9 +54,6 @@
                 </nav>
                 <div class="container-fluid">
                     <div class="row">
-                        <div class="col-md-12 hidden-if-torrents">
-                            <h6 class="text-center pt-4 hidden-if-torrents font-weight-light" style="display: none;">No torrents to show.</h6>
-                        </div>
                         <div class="col-md-12" id="torrentsContainer">
                         </div>
                     </div>
@@ -82,7 +80,7 @@
             </div>
         </div>
     </div>
-    <div class="d-flex flex-column mb-3 show" id="errorBox"></div>
+
 <!--<script src='js/video.js'></script>-->
 
     <div class="modal fade" tabindex="-1" role="dialog" id="settingsModal">
@@ -133,7 +131,7 @@
     </div>
 
     <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" id="addTorrentModal">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-lg modal-dialog-centered " role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title font-weight-light">Add Torrent file</h5>
@@ -147,18 +145,24 @@
                             <input type="file" class="custom-file-input font-weight-light" id="modalFileInput" multiple>
                             <label class="custom-file-label font-weight-light" for="modalFileInput" aria-describedby="inputGroupFileAddon02">Choose file(s)</label>
                         </div>
-                        <div class="input-group-append">
-                                        <span class="input-group-text font-weight-light" id="modalUploadButton">Upload Torrent
+                        <div class="input-group-append" id="modalUploadButton">
+                                        <span class="input-group-text font-weight-light d-none d-lg-block d-xl-block">Upload Torrent
                                             <!--                                        <div class="spinner-border " style="width: 1rem; height: 1rem;" role="status"></div>-->
                                         </span>
+
+                                        <span class="input-group-text font-weight-light d-block d-lg-none d-xl-none"><img src="images/IKONS/PNG/32/arrow_up.png" height="10px;">
+                                <!--                                        <div class="spinner-border " style="width: 1rem; height: 1rem;" role="status"></div>-->
+                                        </span>
+
+
 
                         </div>
                     </div>
                     <div class="input-group mb-3">
                         <div class="input-group">
                             <input type="text" class="form-control font-weight-light" id="modalMagnetInput">
-                            <div class="input-group-append">
-                                            <span class="input-group-text font-weight-light" id="modalMagnetButton">Upload Magnet
+                            <div class="input-group-append" id="modalMagnetButton">
+                                            <span class="input-group-text font-weight-light">Upload Magnet
                                                 <!--                                        <div class="spinner-border " style="width: 1rem; height: 1rem;" role="status"></div>-->
                                             </span>
                             </div>
@@ -272,20 +276,31 @@
         </div>
     </div>
 
-    <div class="container pt-4 pl-1 pr-1" id="authContainer" style="display: none">
-        <h1 class="text-center">Transmission Authentication</h1>
+    <div class="container pl-1 pr-1" id="authContainer" style="display: none; padding-top: 45%">
+        <h2 class="text-center font-weight-light">Transmission Authentication</h2>
+
+<!--        <div class="input-group col-md-6 offset-md-3 pt-3">-->
+<!--            <input type="text" class="form-control" placeholder="Host" aria-label="Host" id="transmissionHost">-->
+<!--        </div>-->
+
         <div class="input-group col-md-6 offset-md-3 pt-3">
-            <input type="text" class="form-control" placeholder="Username" aria-label="Username" id="transmissionUsername">
+            <input type="tel" class="form-control font-weight-light" placeholder="Port" aria-label="Username" id="transmissionPort">
         </div>
 
         <div class="input-group col-md-6 offset-md-3 pt-3">
-            <input type="password" class="form-control text-muted" placeholder="Password" aria-label="Password" id="transmissionPassword">
+            <input type="email" class="form-control font-weight-light" placeholder="Username" aria-label="Username" id="transmissionUsername">
+        </div>
+
+        <div class="input-group col-md-6 offset-md-3 pt-3">
+            <input type="password" class="form-control text-muted font-weight-light" placeholder="Password" aria-label="Password" id="transmissionPassword">
         </div>
 
         <div class="input-group col-md-6 offset-md-3 pt-3">
             <button type="button" class="btn btn-primary btn-block" id="setTransmissionAuth">Log In</button>
         </div>
     </div>
+
+    <div class="d-flex flex-column mb-3 show fixed-bottom container" id="errorBox"></div>
 
 </body>
 </html>

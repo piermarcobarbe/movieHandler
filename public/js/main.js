@@ -318,6 +318,7 @@ createSourceListFile = function(item){
 
         console.log(item.href);
         let url = "video/" + item.href;
+        console.log(url);
         $("#myPlayer").attr("src", url);
         $("#playerRow").addClass("pt-2");
         $("#playerRow").removeClass("d-none");
@@ -335,7 +336,7 @@ createSourceListDir = function (dirname){
     dir.onclick = function () {
         showPlayerNaviButtons();
         console.log("Click on " + dirname);
-        getSourcesList(populateSourcesList, displayError, dirname);
+        getSourcesList(populateSourcesList, displayNotification, dirname);
     };
 
     return dir;
@@ -388,7 +389,7 @@ getSourcesList = function(goodCB, badCB, dir){
         url: path,
         type: "GET"
     }).done(function (data, status) {
-        console.log("get /sources" + dir);
+        // console.log("get /sources" + dir);
         // console.log(status);
         // console.log(data);
         dir ? data.injectedDir = dir : data.injectedDir = "";
@@ -398,7 +399,7 @@ getSourcesList = function(goodCB, badCB, dir){
 
     }).fail (function (data, status) {
         console.log("bad get /sources");
-        if(badCB) return badCB(data);
+        if(badCB) return badCB(data, "danger");
         return data;
 
     });
@@ -427,7 +428,7 @@ renderStatus = function(status){
     $("#myTabContent").show();
     $("#errorContainer").attr("style", "visibility : hidden");
 
-    console.log("status");
+    // console.log("status");
     console.log(status);
 
     // console.log(status.torrentsStatus.torrents.length)
@@ -435,21 +436,16 @@ renderStatus = function(status){
     $("#torrentsContainer").empty();
 
     if(status.torrentsStatus.torrents.length > 0) {
-        $(".hidden-if-torrents").hide();
         for(let i = 0; i < status.torrentsStatus.torrents.length; i++){
             let row = createTorrentRow(status.torrentsStatus.torrents[i]);
             $("#torrentsContainer").append(row);
         };
-    } else {
-
-        $(".hidden-if-torrents").show();
-    }
-
+    };
     populateStatsModal(status);
 
 };
 
-createNewError = function(text){
+createNewNotification = function(text, type){
 
 // <div class="alert alert-warning alert-dismissible fade show" role="alert">
         // <strong>Holy guacamole!</strong> You should check in on some of those fields below.
@@ -457,15 +453,33 @@ createNewError = function(text){
         // <span aria-hidden="true">&times;</span>
     // </button>
     // </div>
+
+
     let _alert = document.createElement("div");
-    _alert.classList.add("mx-auto");
+
+
+    switch (type) {
+        case "danger":
+            _alert.classList.add("alert-danger");
+            break;
+        case "success":
+            _alert.classList.add("alert-success");
+            break;
+        default:
+            _alert.classList.add("alert-primary");
+    }
+    // _alert.classList.add("mx-auto");
     _alert.classList.add("mt-2");
+    _alert.classList.add("pl-2");
+    _alert.classList.add("pr-2");
     _alert.classList.add("alert");
     _alert.classList.add("col-md-6");
-    _alert.classList.add("alert-danger");
+    _alert.classList.add("offset-md-3");
+
     _alert.classList.add("alert-dismissible");
     _alert.classList.add("fade");
     _alert.classList.add("show");
+    _alert.classList.add("font-weight-light");
     _alert.setAttribute("role", "alert");
 
 
@@ -498,20 +512,26 @@ createNewError = function(text){
     return _alert;
 };
 
-displayError = function(error){
-    console.log("error");
-    console.log(error);
+displayNotification = function(message, type){
+    console.log("message");
+    console.log(message);
 
     clearInterval(updateInterval);
     // $("#myTabContent").hide();
     // $("#errorContainer").attr("style", "visibility : visible");
 
 
-    if(error.syscall === "connect" && error.code === "ECONNREFUSED"){
-        var _err = createNewError("Cannot connect to Transmission. Start Transmission and reload the page.")
+    if(message.syscall === "connect" && message.code === "ECONNREFUSED"){
+        var _err = createNewNotification("Cannot connect to Transmission: Start Transmission and reload the page.", type)
+    } else if(message.result) {
+        let errorText = message.result[0].replace(new RegExp("<h1>", 'g'), "<h5>").replace(new RegExp("</h1>", 'g'), "</h5\>");
+        var _err = createNewNotification(errorText, type);
+    } else if(message.Error) {
+        var _err = createNewNotification(message.Error, type);
+    } else if(message.errno === "ENOTFOUND"){
+        var _err = createNewNotification("Cannot connect to " + message.hostname, type);
     } else {
-        let errorText = error.result[0].replace(new RegExp("<h1>", 'g'), "<strong>").replace(new RegExp("</h1>", 'g'), "</strong><br> ");
-        var _err = createNewError(errorText);
+        var _err = createNewNotification(message, type);
     }
 
 
@@ -528,7 +548,7 @@ update = function(){
     getTransmissionStatus(function (status) {
         renderStatus(status)
     }, function (error) {
-        displayError(error.responseJSON);
+        displayNotification(error.responseJSON, "danger");
     });
 };
 
@@ -582,7 +602,7 @@ onClickTorrentRemoveButton = function(){
             update();
         }, function (info) {
             $("#torrentInfoModal").modal('hide');
-            displayError(info);
+            displayNotification(info, "success");
         })
     });
 }
@@ -590,7 +610,7 @@ onClickNaviHomeButton = function(){
     $("#NaviHome").click(function () {
         hidePlayerNaviButtons();
         $("#playerRow").addClass("d-none");
-        getSourcesList(populateSourcesList, displayError);
+        getSourcesList(populateSourcesList, displayNotification);
     });
 };
 
@@ -598,6 +618,8 @@ requestTransmissionAuth = function () {
     let transmissionAuth = {};
     transmissionAuth.user = $("#transmissionUsername").val();
     transmissionAuth.passwd = $("#transmissionPassword").val();
+    // transmissionAuth.host = $("#transmissionHost").val();
+    transmissionAuth.port = $("#transmissionPort").val();
 
     console.log(transmissionAuth);
 
@@ -611,7 +633,8 @@ requestTransmissionAuth = function () {
         console.log("DONE");
         // ("#modalFileInput").val();
 
-        console.log(data);
+        console.log(data.Result);
+        if(data.Result === "Authenticated") displayNotification("Successfully authenticated!", "success");
         console.log(status);
         checkForAuth();
     }).fail (function (data, status) {
@@ -622,7 +645,7 @@ requestTransmissionAuth = function () {
         if(data.status === 401) {
             let transmissionResponseText = JSON.parse(data.responseText);
             console.log(transmissionResponseText);
-            displayError(transmissionResponseText.Error);
+            displayNotification(transmissionResponseText.Error, "danger");
         }
 
         checkForAuth();
@@ -631,12 +654,7 @@ requestTransmissionAuth = function () {
 }
 
 onClickSetTransmissionAuth = function(){
-
     $("#setTransmissionAuth").click(requestTransmissionAuth);
-
-
-
-
 };
 
 checkForAuth = function(){
@@ -645,21 +663,31 @@ checkForAuth = function(){
         $("#mainContainer").show();
         $("#authContainer").hide();
         $("#myTabContent").show();
-        onChangeFileNameUpload();
-        onClickModalUploadButton();
-        onClickMagnetUploadButton();
-        onClickTorrentRemoveButton();
-        onClickNaviHomeButton();
-        update();
-        getSourcesList(populateSourcesList, displayError);
-        monitor(2000);
+        // onChangeFileNameUpload();
+        // onClickModalUploadButton();
+        // onClickMagnetUploadButton();
+        // onClickTorrentRemoveButton();
+        // onClickNaviHomeButton();
+        // update();
+        // getSourcesList(populateSourcesList, displayError);
+        // monitor(2000);
     }, function () {
         $("#mainContainer").hide();
         $("#authContainer").show();
 
     })
 };
+onClickPlayerNavItem = function(){
+    $("#playerNavItem").click(function () {
+      getSourcesList(function (data) {
+            console.log(data);
+            console.log(data.files.length)
+            if(data.files.length === 0 && data.directories.length === 0) return displayNotification("No data found.", "warning");
+      }, function (data) {
 
+      })
+    })
+}
 
 window.onload = function () {
     checkForAuth();
@@ -669,12 +697,14 @@ window.onload = function () {
     onClickMagnetUploadButton();
     onClickTorrentRemoveButton();
     onClickNaviHomeButton();
+    onClickPlayerNavItem();
     update();
-    getSourcesList(populateSourcesList, displayError);
+    getSourcesList(populateSourcesList, displayNotification);
     monitor(2000);
 
     onkeyup = function(e) {
         console.log(e);
+        if(e.target === $("#setTransmissionAuth")) return;
         if (e.key === "Enter") requestTransmissionAuth();
     }
 };
