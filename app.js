@@ -9,11 +9,16 @@ const fileUpload = require('express-fileupload');
 var mime = require('mime-types');
 const serveIndex = require('serve-index');
 var Transmission = require('transmission');
-const videoStream = require('video-stream');
 
 
 app.use(morgan('tiny', {
-    skip: function (req, res) { return req.path === "/status"; }
+    skip: function (req, res) {
+        return req.path === "/status" ||
+        (req.path.substr(0,4) === "/js/") ||
+        (req.path.substr(0,8) === "/images/") ||
+        (req.path.substr(0,5) === "/css/") ||
+        (req.path === "/");
+    }
 }));
 
 app.use(fileUpload());
@@ -35,10 +40,7 @@ if(!(fs.existsSync(settings.torrentFilesDir))) fs.mkdirSync(settings.torrentFile
 
 
 
-var transmission = new Transmission({
-    "host" : "localhost",
-    "port" : 9091
-});
+var transmission = undefined;
 
 completeResponseWithJSON = function(res, code, json){
     res.status(code);
@@ -265,15 +267,17 @@ app.post('/upload/magnet', function(req, res) {
 });
 
 app.get("/status", function (req, res) {
+    if(transmission === undefined) return completeResponseWithJSON(res, 500, newErrorJSON("Transmission setup incomplete."));
     transmission.sessionStats(function (err, args) {
         if(err) return completeResponseWithJSON(res, 500, err);
-
-        // console.log(args);
-
         transmission.get( function (err, torrentsStatus) {
             if(err) return completeResponseWithJSON(res, 500, newErrorJSON(err) );
             args.torrentsStatus = torrentsStatus;
-            completeResponseWithJSON(res, 200, args)
+            transmission.session(function (err, arg) {
+                if(err) return CompleteResponseWithJSON(res, 500, newErrorJSON(err));
+                args.session = arg;
+                completeResponseWithJSON(res, 200, args);
+            })
         })
     });
 });
@@ -285,10 +289,10 @@ app.post("/setup", function (req, res) {
 
 
     let newSettings = {};
-    newSettings.host = transmission.host;
-    newSettings.port = transmission.port;
     newSettings.username = req.body.user;
     newSettings.password = req.body.passwd;
+    newSettings.host = "localhost";
+    newSettings.port = req.body.port;
 
     transmission = new Transmission(newSettings);
 
@@ -309,7 +313,7 @@ app.get("/sources/*", function (req, res) {
     // if(_path === "") return completeResponseWithJSON(res, 404, newErrorJSON("Cannot find sources for requested path." ));
     _path = decodeURI(_path);
     let pathToRead = path.join(settings.torrentDownloadDir, _path);
-    console.log("pTR:" + pathToRead);
+    // console.log("pTR:" + pathToRead);
     // console.log("resolved path: " + path.resolve( "/video", _path , ":filename"));
     // app.get(path.resolve( "/video", _path , ":filename") ,videoStream({ dir: path.resolve(pathToRead)}));
     // console.log(req.path);
