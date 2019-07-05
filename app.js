@@ -300,9 +300,12 @@ app.post("/setup", function (req, res) {
         if(err) return completeResponseWithJSON(res, 401, newErrorJSON(err));
         return completeResponseWithJSON(res, 200, newResultJSON("Authenticated"));
     });
+});
 
+app.post("/disconnect", function (req, res) {
 
-
+    transmission = new Transmission();
+    return completeResponseWithJSON(res, 200, newResultJSON("Disconnected"));
 
 });
 
@@ -356,18 +359,18 @@ app.get('/video/*', function(req, res) {
     const mt = mime.lookup(filePath);
     if (range) {
         const parts = range.replace(/bytes=/, "").split("-");
-        const start = parseInt(parts[0], 10)
+        const start = parseInt(parts[0], 10);
         const end = parts[1]
             ? parseInt(parts[1], 10)
             : fileSize-1
-        const chunksize = (end-start)+1
-        const file = fs.createReadStream(filePath, {start, end})
+        const chunksize = (end-start)+1;
+        const file = fs.createReadStream(filePath, {start, end});
         const head = {
             'Content-Range': `bytes ${start}-${end}/${fileSize}`,
             'Accept-Ranges': 'bytes',
             'Transfer-Encoding': 'chunked',
             'Content-Length': chunksize,
-            'Content-Type': `video/mp4`
+            'Content-Type': mt
 
         }
         res.writeHead(206, head);
@@ -384,28 +387,6 @@ app.get('/video/*', function(req, res) {
         fs.createReadStream(filePath).pipe(res)
     }
 });
-
-
-
-function remove(hash) {
-    transmission.remove(hash, function(err) {
-        if (err) {
-            throw err;
-        }
-        console.log('torrent was removed');
-    });
-}
-
-//
-// transmission.addUrl(sample, {
-//     //options
-// }, function(err, result) {
-//     if (err) {
-//         return console.log(err)
-//     }
-//     var hash = result.hashString;
-//     watch(hash);
-// });
 
 app.use(bodyParser.json());
 
