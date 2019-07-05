@@ -61,6 +61,8 @@ saveFile = function(file, resCB, errCB){
     var finalFileName = path.join(settings.torrentFilesDir, file.name);
     console.log("Saving file:" + file.name + " in " + finalFileName);
 
+    if(file.mimeType !== "application/x-bittorrent") return errCB("Only torrents files can be saved.");
+    console.log(file);
     // console.log(file);
 
     fs.writeFile(finalFileName, file.data, function (err) {
