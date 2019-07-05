@@ -476,7 +476,7 @@ createNewNotification = function(text, type){
     _alert.classList.add("pr-2");
     _alert.classList.add("alert");
     _alert.classList.add("col-md-6");
-    _alert.classList.add("off`set`-md-3");
+    _alert.classList.add("offset-md-3");
 
     _alert.classList.add("alert-dismissible");
     _alert.classList.add("fade");
