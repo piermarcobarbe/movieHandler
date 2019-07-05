@@ -720,7 +720,6 @@ checkForAuth = function(){
         $("#authContainer").show();
         $("#myTabContent").hide();
         clearAuthenticationFields();
-        onClickSetTransmissionAuth();
 
     })
 };
