@@ -296,12 +296,14 @@ createSourceListItem = function(item){
     r.classList.add("btn");
     r.classList.add("btn-dark");
     r.classList.add("font-weight-light");
-    r.classList.add("mt-1");
+    r.classList.add("mt-2");
     r.classList.add("text-left");
     r.classList.add("pr-4");
 
 
-    if(typeof item === 'string') r.innerText = item;
+    console.log(r);
+
+    if(typeof item === 'string') r.innerText = item + "/";
     if(typeof item === 'object') r.innerText = item.file;
 
     return r;
@@ -611,7 +613,6 @@ onClickTorrentRemoveButton = function(){
 onClickNaviHomeButton = function(){
     $("#NaviHome").click(function () {
         hidePlayerNaviButtons();
-        $("#playerRow").addClass("d-none");
         getSourcesList(populateSourcesList, displayNotification);
     });
 };
@@ -725,13 +726,15 @@ checkForAuth = function(){
 };
 onClickPlayerNavItem = function(){
     $("#playerNavItem").click(function () {
-      getSourcesList(function (data) {
-            console.log(data);
-            console.log(data.files.length)
-            if(data.files.length === 0 && data.directories.length === 0) return displayNotification("No data found.", "warning");
-      }, function (data) {
-
-      })
+        if($(this).hasClass('active')) return;
+          getSourcesList(function (data) {
+                console.log(data);
+                console.log(data.files.length)
+                if(data.files.length === 0 && data.directories.length === 0) return displayNotification("No data found.", "warning");
+          }, function (data) {
+              console.log(data);
+              displayNotification(data, "danger");
+          });
     })
 }
 
