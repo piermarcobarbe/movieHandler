@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="height: 100%;">
+<html lang="en" style="height: 100%;" class="bg-dark">
 <head>
 
     <script src="js/jquery-3.3.1.min.js" ></script>
@@ -13,7 +13,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
 </head>
-<body>
+<body class="bg-dark">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand font-weight-light text-white">Movie Handler</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <button type="button" class="btn btn-outline-light font-weight-light" id="disconnectButton">Disconnect</button>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
     <div class="container-fluid pt-1 pl-1 pr-1" id="mainContainer" style="display: none;">
         <ul class="nav nav-tabs nav-fill">
             <li class="nav-item">
@@ -31,7 +47,8 @@
         <div class="tab-content h-100" id="myTabContent" style="height: 100%;">
 
             <div class="tab-pane fade h-100 active show" id="transmissionTab" role="tabpanel" aria-labelledby="transmission-tab">
-                <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+                    <a class="navbar-brand font-weight-light text-white"></a>
                     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
                     </button>
@@ -52,9 +69,9 @@
                         </div>
                     </div>
                 </nav>
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-md-12" id="torrentsContainer">
+                <div class="container-fluid bg-dark">
+                    <div class="row ">
+                        <div class="col-md-12 " id="torrentsContainer">
                         </div>
                     </div>
                 </div>
@@ -64,8 +81,8 @@
                 <div class="container-fluid">
                     <div class="row d-none" id="playerRow">
                         <div class="col-md-8 mx-auto embed-responsive embed-responsive-16by9">
-                            <iframe id='myPlayer' class='embed-responsive-item' >
-                            </iframe>
+                            <video controls autoplay id='myPlayer' class='embed-responsive-item' >
+                            </video>
                         </div>
                     </div>
                     <div class="row col-md-8 mx-auto d-none pt-1 pb-1" id="playerNaviButtons">
@@ -81,16 +98,14 @@
         </div>
     </div>
 
+
 <!--<script src='js/video.js'></script>-->
 
-    <div class="modal fade" tabindex="-1" role="dialog" id="settingsModal">
+    <div class="modal fade " tabindex="-1" role="dialog" id="settingsModal">
         <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
+            <div class="modal-content bg-dark">
                 <div class="modal-header">
-                    <h5 class="modal-title font-weight-light">Settings</h5>
-                    <button type="button" class="close font-weight-light" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true" class="font-weight-light">&times;</span>
-                    </button>
+                    <h3 class="modal-title  text-center font-weight-light text-white" style="margin: 0 auto">Settings</h3>
                 </div>
                 <div class="modal-body">
 
@@ -99,7 +114,7 @@
                         <ul class="nav nav-tabs nav-fill">
                             <li class="nav-item">
                                 <a class="nav-link text-white bg-dark font-weight-light active" data-toggle="tab" role="tab" href="#transmissionAuthSettings" aria-controls="transmissionAuthSettings" aria-selected="true">
-                                    <h5 class="font-weight-light">Transmission Authentication</h5>
+                                    <h5 class="font-weight-light text-white">Transmission Authentication</h5>
                                 </a>
                             </li>
 
@@ -276,28 +291,31 @@
         </div>
     </div>
 
-    <div class="container pl-1 pr-1" id="authContainer" style="display: none; padding-top: 45%">
-        <h2 class="text-center font-weight-light">Transmission Authentication</h2>
+    <div class="container h-100" id="authContainer" style="display: none;">
+        <div class="row" style="margin: 0; position: absolute; top: 50%; left: 50%; -ms-transform: translate(-50%, -50%); transform: translate(-50%, -50%);">
+            <h4 class="text-center font-weight-light col-md-12 text-white" >Transmission Authentication</h4>
 
-<!--        <div class="input-group col-md-6 offset-md-3 pt-3">-->
-<!--            <input type="text" class="form-control" placeholder="Host" aria-label="Host" id="transmissionHost">-->
-<!--        </div>-->
+            <!--        <div class="input-group col-md-6 offset-md-3 pt-3">-->
+            <!--            <input type="text" class="form-control" placeholder="Host" aria-label="Host" id="transmissionHost">-->
+            <!--        </div>-->
 
-        <div class="input-group col-md-6 offset-md-3 pt-3">
-            <input type="tel" class="form-control font-weight-light" placeholder="Port" aria-label="Username" id="transmissionPort">
+            <div class="input-group col-md-12 pt-3">
+                <input type="tel" class="form-control font-weight-light" placeholder="Port" aria-label="Username" id="transmissionPort">
+            </div>
+
+            <div class="input-group col-md-12 pt-3">
+                <input type="email" class="form-control font-weight-light" placeholder="Username" aria-label="Username" id="transmissionUsername">
+            </div>
+
+            <div class="input-group col-md-12 pt-3">
+                <input type="password" class="form-control text-muted font-weight-light" placeholder="Password" aria-label="Password" id="transmissionPassword">
+            </div>
+
+            <div class="input-group col-md-12 pt-3">
+                <button type="button" class="btn btn-outline-light btn-block" id="setTransmissionAuth">Log In</button>
+            </div>
         </div>
 
-        <div class="input-group col-md-6 offset-md-3 pt-3">
-            <input type="email" class="form-control font-weight-light" placeholder="Username" aria-label="Username" id="transmissionUsername">
-        </div>
-
-        <div class="input-group col-md-6 offset-md-3 pt-3">
-            <input type="password" class="form-control text-muted font-weight-light" placeholder="Password" aria-label="Password" id="transmissionPassword">
-        </div>
-
-        <div class="input-group col-md-6 offset-md-3 pt-3">
-            <button type="button" class="btn btn-primary btn-block" id="setTransmissionAuth">Log In</button>
-        </div>
     </div>
 
     <div class="d-flex flex-column mb-3 show fixed-bottom container" id="errorBox"></div>
