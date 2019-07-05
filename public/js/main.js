@@ -320,6 +320,8 @@ createSourceListFile = function(item){
         let url = "video/" + item.href;
         console.log(url);
         $("#myPlayer").attr("src", url);
+        $("#myPlayer").attr("type", "video/mp4");
+
         $("#playerRow").addClass("pt-2");
         $("#playerRow").removeClass("d-none");
 
@@ -474,7 +476,7 @@ createNewNotification = function(text, type){
     _alert.classList.add("pr-2");
     _alert.classList.add("alert");
     _alert.classList.add("col-md-6");
-    _alert.classList.add("offset-md-3");
+    _alert.classList.add("off`set`-md-3");
 
     _alert.classList.add("alert-dismissible");
     _alert.classList.add("fade");
@@ -585,7 +587,7 @@ onClickMagnetUploadButton = function(){
             });
 
         }
-    })
+    });
 
 };
 
@@ -614,14 +616,7 @@ onClickNaviHomeButton = function(){
     });
 };
 
-requestTransmissionAuth = function () {
-    let transmissionAuth = {};
-    transmissionAuth.user = $("#transmissionUsername").val();
-    transmissionAuth.passwd = $("#transmissionPassword").val();
-    // transmissionAuth.host = $("#transmissionHost").val();
-    transmissionAuth.port = $("#transmissionPort").val();
-
-    console.log(transmissionAuth);
+requestSetup = function(transmissionAuth, goodcb, badcb){
 
     $.ajax({
         url: "/setup",
@@ -630,18 +625,60 @@ requestTransmissionAuth = function () {
         contentType: 'application/json; charset=utf-8',
         dataType: 'json'
     }).done(function (data, status) {
-        console.log("DONE");
+        console.log("POST /setup");
         // ("#modalFileInput").val();
 
-        console.log(data.Result);
-        if(data.Result === "Authenticated") displayNotification("Successfully authenticated!", "success");
-        console.log(status);
-        checkForAuth();
+        if(goodcb) return goodcb(data);
+        return data;
     }).fail (function (data, status) {
+        console.log("POST /setup");
         console.log("ERROR");
         console.log(data);
         console.log(status);
 
+        if (badcb) return badcb(data);
+        return data;
+    });
+};
+
+requestDisconnect = function(goodcb, badcb){
+
+    $.ajax({
+        url: "/disconnect",
+        type: 'POST',
+        data: null
+    }).done(function (data, status) {
+        console.log("POST /disconnect");
+        // ("#modalFileInput").val();
+
+        if(goodcb) return goodcb(data);
+        return data;
+    }).fail (function (data, status) {
+        console.log("POST /disconnect");
+        console.log("ERROR");
+        console.log(data);
+        console.log(status);
+
+        if (badcb) return badcb(data);
+        return data;
+    });
+};
+
+requestTransmissionAuth = function () {
+    let transmissionAuth = {};
+    transmissionAuth.user = $("#transmissionUsername").val();
+    transmissionAuth.passwd = $("#transmissionPassword").val();
+    // transmissionAuth.host = $("#transmissionHost").val();
+    transmissionAuth.port = $("#transmissionPort").val();
+
+    console.log(transmissionAuth);
+    
+    requestSetup(transmissionAuth, function (data) {
+        console.log(data.Result);
+        if(data.Result === "Authenticated") displayNotification("Successfully authenticated!", "success");
+        console.log(status);
+        checkForAuth();
+    }, function (data) {
         if(data.status === 401) {
             let transmissionResponseText = JSON.parse(data.responseText);
             console.log(transmissionResponseText);
@@ -649,12 +686,17 @@ requestTransmissionAuth = function () {
         }
 
         checkForAuth();
-    });
-
-}
+    })
+};
 
 onClickSetTransmissionAuth = function(){
     $("#setTransmissionAuth").click(requestTransmissionAuth);
+};
+
+clearAuthenticationFields = function(){
+    $("#transmissionPort").val("");
+    $("#transmissionUsername").val("");
+    $("#transmissionPassword").val("");
 };
 
 checkForAuth = function(){
@@ -663,6 +705,8 @@ checkForAuth = function(){
         $("#mainContainer").show();
         $("#authContainer").hide();
         $("#myTabContent").show();
+        $("#setTransmissionAuth").click(null);
+
         // onChangeFileNameUpload();
         // onClickModalUploadButton();
         // onClickMagnetUploadButton();
@@ -674,6 +718,9 @@ checkForAuth = function(){
     }, function () {
         $("#mainContainer").hide();
         $("#authContainer").show();
+        $("#myTabContent").hide();
+        clearAuthenticationFields();
+        onClickSetTransmissionAuth();
 
     })
 };
@@ -689,6 +736,22 @@ onClickPlayerNavItem = function(){
     })
 }
 
+onClickDisconnectButton = function(){
+    $("#disconnectButton").click(function () {
+        if(window.confirm("Disconnect from Movie Handler?")){
+            requestDisconnect(function () {
+                displayNotification("Successfully Disconnected!", "success");
+                checkForAuth();
+            }, function () {
+                displayNotification("Cannot disconnect!", "danger");
+                checkForAuth();
+            })
+        }
+    });
+};
+
+
+
 window.onload = function () {
     checkForAuth();
     onClickSetTransmissionAuth();
@@ -698,13 +761,27 @@ window.onload = function () {
     onClickTorrentRemoveButton();
     onClickNaviHomeButton();
     onClickPlayerNavItem();
+    onClickDisconnectButton();
     update();
     getSourcesList(populateSourcesList, displayNotification);
     monitor(2000);
 
     onkeyup = function(e) {
-        console.log(e);
+        // console.log(e);
         if(e.target === $("#setTransmissionAuth")) return;
         if (e.key === "Enter") requestTransmissionAuth();
     }
+
+    $(".modal").on('show.bs.modal', function () {
+        console.log("shown");
+        $("#mainContainer").attr("style", "filter: blur(8px)");
+        $(".navbar").attr("style", "filter: blur(8px)");
+        // filter: blur(8px);
+    });
+
+    $(".modal").on('hidden.bs.modal', function () {
+        console.log("hidden");
+        $("#mainContainer").attr("style", "filter: blur(0px)");
+        $(".navbar").attr("style", "filter: blur(0px)");
+    })
 };
